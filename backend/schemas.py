@@ -1,0 +1,46 @@
+from pydantic import BaseModel
+from typing import List, Optional
+from datetime import date
+
+class UserBase(BaseModel):
+    username: str
+    email: str
+
+class UserCreate(UserBase):
+    password: str
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class User(UserBase):
+    id: int
+    profile_pic: Optional[str] = None
+    partner_id: Optional[int] = None
+    link_code: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+class LogCreate(BaseModel):
+    date: date
+    green_flags: List[str]
+    red_flags: List[str]
+
+class LogResponse(LogCreate):
+    id: int
+    score: int
+    user_id: int
+
+    class Config:
+        from_attributes = True
+
+class LinkPartner(BaseModel):
+    link_code: str
