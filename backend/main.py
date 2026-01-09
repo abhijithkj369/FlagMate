@@ -51,8 +51,10 @@ def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     db.refresh(new_user)
     return new_user
 
+from fastapi.security import OAuth2PasswordRequestForm
+
 @app.post("/token", response_model=schemas.Token)
-def login_for_access_token(form_data: schemas.UserLogin, db: Session = Depends(database.get_db)):
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
     if not user or not auth.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -96,6 +98,7 @@ def create_log(log: schemas.LogCreate, current_user: models.User = Depends(auth.
         date=log.date,
         green_flags=log.green_flags,
         red_flags=log.red_flags,
+        mood=log.mood,
         score=score
     )
     db.add(db_log)
@@ -115,4 +118,24 @@ def get_recommendations(query: str):
         "Left towel on floor", "Forgot date", "Interrupted", "Cooked dinner"
     ]
     return [f for f in common_flags if query.lower() in f.lower()]
+
+@app.post("/notes", response_model=schemas.NoteResponse)
+def create_note(note: schemas.NoteCreate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if not current_user.partner_id:
+        raise HTTPException(status_code=400, detail="You must be linked to a partner to send notes")
+    
+    db_note = models.LoveNote(
+        sender_id=current_user.id,
+        receiver_id=current_user.partner_id,
+        content=note.content
+    )
+    db.add(db_note)
+    db.commit()
+    db.refresh(db_note)
+    return db_note
+
+@app.get("/notes", response_model=list[schemas.NoteResponse])
+def get_notes(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    # Get notes sent TO the current user
+    return db.query(models.LoveNote).filter(models.LoveNote.receiver_id == current_user.id).order_by(models.LoveNote.created_at.desc()).all()
 

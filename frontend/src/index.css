@@ -3,9 +3,13 @@
 @tailwind utilities;
 
 body {
-  @apply bg-slate-50 text-slate-900;
+  @apply bg-gradient-to-br from-sage-light via-white to-rose-light min-h-screen text-deep-charcoal font-sans;
+}
+
+.glass {
+  @apply bg-glass-white backdrop-blur-md border border-white/20 shadow-xl;
 }
 
 .heatmap-container text {
-  @apply text-xs fill-slate-400;
+  @apply text-xs fill-slate-500;
 }

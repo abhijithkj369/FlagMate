@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime
 
 class UserBase(BaseModel):
     username: str
@@ -33,6 +33,7 @@ class LogCreate(BaseModel):
     date: date
     green_flags: List[str]
     red_flags: List[str]
+    mood: int
 
 class LogResponse(LogCreate):
     id: int
@@ -44,3 +45,16 @@ class LogResponse(LogCreate):
 
 class LinkPartner(BaseModel):
     link_code: str
+
+class NoteCreate(BaseModel):
+    content: str
+
+class NoteResponse(NoteCreate):
+    id: int
+    sender_id: int
+    receiver_id: int
+    created_at: datetime
+    is_read: int
+
+    class Config:
+        from_attributes = True

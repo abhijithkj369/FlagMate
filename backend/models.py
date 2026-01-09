@@ -33,6 +33,20 @@ class DailyLog(Base):
     date = Column(Date, index=True)
     green_flags = Column(JSON, default=list)
     red_flags = Column(JSON, default=list)
+    mood = Column(Integer, default=5) # 1-10 scale
     score = Column(Integer, default=0)
 
     user = relationship("User", back_populates="logs")
+
+class LoveNote(Base):
+    __tablename__ = "love_notes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sender_id = Column(Integer, ForeignKey("users.id"))
+    receiver_id = Column(Integer, ForeignKey("users.id"))
+    content = Column(String)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_read = Column(Integer, default=0) # 0=Unread, 1=Read
+
+    sender = relationship("User", foreign_keys=[sender_id])
+    receiver = relationship("User", foreign_keys=[receiver_id])
