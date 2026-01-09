@@ -24,6 +24,14 @@ export default function LogFlags() {
         }
     }
 
+    const getMoodEmoji = (m) => {
+        if (m >= 9) return "🥰"
+        if (m >= 7) return "🙂"
+        if (m >= 5) return "😐"
+        if (m >= 3) return "😤"
+        return "🤬"
+    }
+
     return (
         <div className="min-h-screen p-6 flex flex-col items-center pb-24">
             <h1 className="text-3xl font-bold text-deep-charcoal mb-8">Log Today's Vibe ✨</h1>
@@ -37,7 +45,7 @@ export default function LogFlags() {
                 >
                     <h2 className="text-xl font-semibold mb-6 text-deep-charcoal">How are you feeling about the relationship today?</h2>
                     <div className="flex items-center gap-4 max-w-lg mx-auto">
-                        <span className="text-2xl">☁️</span>
+                        <span className="text-4xl transition-all transform hover:scale-110">{getMoodEmoji(mood)}</span>
                         <input
                             type="range"
                             min="1"
@@ -46,9 +54,8 @@ export default function LogFlags() {
                             onChange={(e) => setMood(parseInt(e.target.value))}
                             className="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sage-green"
                         />
-                        <span className="text-2xl">☀️</span>
+                        <span className="text-2xl font-bold text-sage-green w-8">{mood}</span>
                     </div>
-                    <p className="mt-4 text-2xl font-bold text-sage-green">{mood}/10</p>
                 </motion.div>
 
                 <div className="grid md:grid-cols-2 gap-8">

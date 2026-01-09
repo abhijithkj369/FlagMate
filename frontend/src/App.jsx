@@ -5,6 +5,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import LogFlags from './pages/LogFlags'
 import LoveNotes from './pages/LoveNotes'
+import Profile from './pages/Profile'
 import AuthGuard from './components/AuthGuard'
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/log" element={<LogFlags />} />
                 <Route path="/notes" element={<LoveNotes />} />
+                <Route path="/profile" element={<Profile />} />
             </Route>
         </Routes>
     )

@@ -11,6 +11,8 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     profile_pic = Column(String, nullable=True)
+    avatar_url = Column(String, default="🐶") # Default emoji avatar
+    theme_color = Column(String, default="sage") # sage, ocean, sunset, rose
     partner_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     link_code = Column(String, unique=True, index=True, nullable=True)
 

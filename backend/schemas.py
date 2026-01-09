@@ -9,6 +9,10 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+class UserUpdate(BaseModel):
+    avatar_url: Optional[str] = None
+    theme_color: Optional[str] = None
+
 class UserLogin(BaseModel):
     username: str
     password: str
@@ -16,6 +20,8 @@ class UserLogin(BaseModel):
 class User(UserBase):
     id: int
     profile_pic: Optional[str] = None
+    avatar_url: Optional[str] = None
+    theme_color: Optional[str] = None
     partner_id: Optional[int] = None
     link_code: Optional[str] = None
 

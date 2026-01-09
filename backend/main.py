@@ -72,6 +72,16 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 def read_users_me(current_user: models.User = Depends(auth.get_current_user)):
     return current_user
 
+@app.put("/users/me", response_model=schemas.User)
+def update_user_me(user_update: schemas.UserUpdate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if user_update.avatar_url:
+        current_user.avatar_url = user_update.avatar_url
+    if user_update.theme_color:
+        current_user.theme_color = user_update.theme_color
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
 @app.post("/link-partner")
 def link_partner(link_data: schemas.LinkPartner, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
     if current_user.partner_id:
@@ -109,6 +119,12 @@ def create_log(log: schemas.LogCreate, current_user: models.User = Depends(auth.
 @app.get("/logs", response_model=list[schemas.LogResponse])
 def get_logs(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
     return db.query(models.DailyLog).filter(models.DailyLog.user_id == current_user.id).all()
+
+@app.get("/logs/partner", response_model=list[schemas.LogResponse])
+def get_partner_logs(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if not current_user.partner_id:
+        return []
+    return db.query(models.DailyLog).filter(models.DailyLog.user_id == current_user.partner_id).order_by(models.DailyLog.date.desc()).limit(7).all()
 
 @app.get("/recommendations")
 def get_recommendations(query: str):
