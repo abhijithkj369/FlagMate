@@ -152,6 +152,40 @@ def create_note(note: schemas.NoteCreate, current_user: models.User = Depends(au
 
 @app.get("/notes", response_model=list[schemas.NoteResponse])
 def get_notes(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
-    # Get notes sent TO the current user
-    return db.query(models.LoveNote).filter(models.LoveNote.receiver_id == current_user.id).order_by(models.LoveNote.created_at.desc()).all()
+    # Get all notes between current user and partner
+    if not current_user.partner_id:
+        return []
+    
+    notes = db.query(models.LoveNote).filter(
+        ((models.LoveNote.sender_id == current_user.id) & (models.LoveNote.receiver_id == current_user.partner_id)) |
+        ((models.LoveNote.sender_id == current_user.partner_id) & (models.LoveNote.receiver_id == current_user.id))
+    ).order_by(models.LoveNote.created_at.asc()).all()
+    
+    return notes
+
+@app.get("/health-score")
+def get_relationship_health(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if not current_user.partner_id:
+        return {"score": 0, "status": "Not Linked"}
+    
+    # Get last 7 days of logs for both users
+    user_logs = db.query(models.DailyLog).filter(models.DailyLog.user_id == current_user.id).order_by(models.DailyLog.date.desc()).limit(7).all()
+    partner_logs = db.query(models.DailyLog).filter(models.DailyLog.user_id == current_user.partner_id).order_by(models.DailyLog.date.desc()).limit(7).all()
+    
+    all_logs = user_logs + partner_logs
+    if not all_logs:
+        return {"score": 5.0, "status": "No Data"} # Default neutral
+        
+    # Simple algorithm: Average of (Mood + (GreenFlags - RedFlags))
+    # Normalized to 0-10 scale
+    total_score = 0
+    for log in all_logs:
+        log_score = log.mood + (len(log.green_flags) - len(log.red_flags))
+        # Clamp between 0 and 10
+        log_score = max(0, min(10, log_score))
+        total_score += log_score
+        
+    avg_score = round(total_score / len(all_logs), 1)
+    
+    return {"score": avg_score, "status": "Calculated"}
 

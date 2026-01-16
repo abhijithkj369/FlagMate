@@ -35,17 +35,8 @@ export default function LoveNotes() {
 
     const fetchNotes = async () => {
         try {
-            // In a real app, we'd fetch conversation (sent + received). 
-            // For now, let's just fetch received notes and maybe we can't see sent ones easily without a new endpoint.
-            // Wait, the plan didn't add a conversation endpoint. 
-            // Let's stick to the plan: "Redesign list as a chat window".
-            // To make it look like chat, we really need both sides.
-            // I'll assume for now we only see what we RECEIVED (left side) and what we SEND (optimistically added to right side).
-            // Actually, let's fetch received notes.
             const res = await api.get('/notes')
-            // We need to sort by date.
-            const sorted = res.data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-            setNotes(sorted)
+            setNotes(res.data)
         } catch (err) {
             console.error(err)
         } finally {
@@ -60,19 +51,7 @@ export default function LoveNotes() {
         try {
             await api.post('/notes', { content: newNote })
             setNewNote('')
-            // Optimistically add a "sent" note to UI? 
-            // Since we don't fetch sent notes from backend, this will disappear on refresh.
-            // But for the "demo" feel, let's just show a success toast or something.
-            // Or better, let's just alert for now as per previous behavior, but in a nicer way?
-            // No, user wants chat.
-            // I'll add a temporary "sent" object to the list.
-            const tempNote = {
-                id: Date.now(),
-                content: newNote,
-                created_at: new Date().toISOString(),
-                is_sent_by_me: true // Marker
-            }
-            setNotes(prev => [...prev, tempNote])
+            fetchNotes() // Refresh list to show new message
         } catch (err) {
             alert('Failed to send. Linked?')
         }
@@ -95,22 +74,25 @@ export default function LoveNotes() {
                     </div>
                 ) : (
                     <AnimatePresence>
-                        {notes.map((note) => (
-                            <motion.div
-                                key={note.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className={`max-w-[80%] p-3 rounded-2xl ${note.is_sent_by_me
+                        {notes.map((note) => {
+                            const isMe = note.sender_id === user?.id
+                            return (
+                                <motion.div
+                                    key={note.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className={`max-w-[80%] p-3 rounded-2xl ${isMe
                                         ? 'bg-sage-green text-white self-end rounded-br-none'
                                         : 'bg-white text-deep-charcoal self-start rounded-bl-none shadow-sm'
-                                    }`}
-                            >
-                                <p>{note.content}</p>
-                                <p className={`text-[10px] mt-1 ${note.is_sent_by_me ? 'text-sage-light' : 'text-slate-400'}`}>
-                                    {new Date(note.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </p>
-                            </motion.div>
-                        ))}
+                                        }`}
+                                >
+                                    <p>{note.content}</p>
+                                    <p className={`text-[10px] mt-1 ${isMe ? 'text-sage-light' : 'text-slate-400'}`}>
+                                        {new Date(note.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                </motion.div>
+                            )
+                        })}
                     </AnimatePresence>
                 )}
                 <div ref={messagesEndRef} />
